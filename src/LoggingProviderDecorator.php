@@ -10,20 +10,13 @@
 
 namespace Kdyby\Geocoder\Logging;
 
-use Geocoder;
+use Geocoder\Exception\NoResult as GeocoderNoResultException;
+use Geocoder\Exception\QuotaExceeded as GeocoderQuotaExceededException;
 use Geocoder\Model\AddressCollection;
-use Geocoder\Provider\AbstractProvider;
 use Geocoder\Provider\Provider;
-use Ivory;
-use Kdyby;
 use Psr\Log\LoggerInterface;
 
-
-
-/**
- * @author Filip Procházka <filip@prochazka.su>
- */
-class LoggingProviderDecorator extends AbstractProvider implements Provider
+class LoggingProviderDecorator extends \Geocoder\Provider\AbstractProvider implements \Geocoder\Provider\Provider
 {
 
 	/**
@@ -36,16 +29,12 @@ class LoggingProviderDecorator extends AbstractProvider implements Provider
 	 */
 	private $logger;
 
-
-
 	public function __construct(Provider $provider, LoggerInterface $logger)
 	{
 		parent::__construct();
 		$this->provider = $provider;
 		$this->logger = $logger;
 	}
-
-
 
 	/**
 	 * {@inheritDoc}
@@ -55,22 +44,21 @@ class LoggingProviderDecorator extends AbstractProvider implements Provider
 		try {
 			return $this->provider->limit($this->getLimit())->geocode($value);
 
-		} catch (Geocoder\Exception\NoResult $e) {
+		} catch (GeocoderNoResultException $e) {
+			// ignore
 
-		} catch (Geocoder\Exception\QuotaExceeded $e) {
+		} catch (GeocoderQuotaExceededException $e) {
 			$this->logger->warning(sprintf('QuotaExceeded(%s): %s', $this->provider->getName(), $e->getMessage()));
 
-		} catch (Ivory\HttpAdapter\HttpAdapterException $e) {
+		} catch (\Ivory\HttpAdapter\HttpAdapterException $e) {
 			$this->logger->warning(sprintf('%s(%s): %s', get_class($e), $this->provider->getName(), $e->getMessage()));
 
-		} catch (Geocoder\Exception\Exception $e) {
+		} catch (\Geocoder\Exception\Exception $e) {
 			$this->logger->warning(sprintf('%s(%s): %s', get_class($e), $this->provider->getName(), $e->getMessage()));
 		}
 
 		return new AddressCollection([]);
 	}
-
-
 
 	/**
 	 * {@inheritDoc}
@@ -80,22 +68,21 @@ class LoggingProviderDecorator extends AbstractProvider implements Provider
 		try {
 			return $this->provider->limit($this->getLimit())->reverse($latitude, $longitude);
 
-		} catch (Geocoder\Exception\NoResult $e) {
+		} catch (GeocoderNoResultException $e) {
+			// ignore
 
-		} catch (Geocoder\Exception\QuotaExceeded $e) {
+		} catch (GeocoderQuotaExceededException $e) {
 			$this->logger->warning(sprintf('QuotaExceeded(%s): %s', $this->provider->getName(), $e->getMessage()));
 
-		} catch (Ivory\HttpAdapter\HttpAdapterException $e) {
+		} catch (\Ivory\HttpAdapter\HttpAdapterException $e) {
 			$this->logger->warning(sprintf('%s(%s): %s', get_class($e), $this->provider->getName(), $e->getMessage()));
 
-		} catch (Geocoder\Exception\Exception $e) {
+		} catch (\Geocoder\Exception\Exception $e) {
 			$this->logger->warning(sprintf('%s(%s): %s', get_class($e), $this->provider->getName(), $e->getMessage()));
 		}
 
 		return new AddressCollection([]);
 	}
-
-
 
 	/**
 	 * {@inheritDoc}
